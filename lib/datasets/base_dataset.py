@@ -51,7 +51,7 @@ class BaseDataset(Dataset):
         audio_wave = self.load_audio(audio_path)
         audio_wave = self.process_wave(audio_wave)
         entry = {
-            "audio": audio_wave,
+            "wave": audio_wave,
             "duration": audio_wave.size(1) / self.config_parser["preprocessing"]["sr"],
             "audio_path": audio_path,
         }
