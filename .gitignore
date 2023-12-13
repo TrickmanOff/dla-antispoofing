@@ -1,0 +1,14 @@
+.DS_Store
+.idea
+.ipynb_checkpoints
+
+**/__pycache__
+
+*.pdf
+
+Untitled.ipynb
+saved
+wandb
+
+audios
+inference
