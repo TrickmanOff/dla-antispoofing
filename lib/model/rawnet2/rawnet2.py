@@ -41,16 +41,15 @@ class RawNet2(BaseModel):
 
         self.head = nn.Linear(gru_hidden_size, 2)
 
-    def forward(self, wave: Tensor) -> Tensor:
+    def forward(self, wave: Tensor, **batch) -> Tensor:
         """
         :param wave: (B, 1, T)
-        :return: probs: (B, 2)
+        :return: logits: (B, 2)
         """
         output = self.sinc_block(wave)  # (B, C, T')
         output = self.res_blocks(output)  # (B, C', T'')
         if self.norm_before_gru is not None:
             output = self.norm_before_gru(output)
         output = self.gru(output.transpose(-2, -1))[0][:, -1]  # (B, hidden_size)
-        output = self.head(output)  # (B, 2)
-        probs = F.softmax(output, dim=-1)
-        return probs
+        logits = self.head(output)  # (B, 2)
+        return logits

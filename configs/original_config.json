@@ -16,5 +16,12 @@
       },
       "res_blocks_out_channels": [128, 128, 512, 512, 512, 512]
     }
+  },
+  "loss": {
+    "type": "CrossEntropyLoss",
+    "args": {
+      "spoofed_weight": 1.0,
+      "bonafide_weight": 9.0
+    }
   }
 }

@@ -20,5 +20,12 @@
         "num_layers": 3
       }
     }
+  },
+  "loss": {
+    "type": "CrossEntropyLoss",
+    "args": {
+      "spoofed_weight": 1.0,
+      "bonafide_weight": 9.0
+    }
   }
 }
