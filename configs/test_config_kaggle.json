@@ -38,8 +38,9 @@
           "args": {
             "part": "train",
             "same_audio_length": 4.0,
-            "data_dir": "/Volumes/Samsung_T5/hse4/dla/hw5/data/ASVspoof 2019/LA",
-            "limit": 3
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
+            "index_dir": "indices",
+            "limit": 64
           }
         }
       ]
@@ -52,8 +53,9 @@
           "type": "ASVSpoof2019LADataset",
           "args": {
             "part": "dev",
-            "data_dir": "/Volumes/Samsung_T5/hse4/dla/hw5/data/ASVspoof 2019/LA",
-            "limit": 3
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
+            "index_dir": "indices",
+            "limit": 64
           }
         }
       ]

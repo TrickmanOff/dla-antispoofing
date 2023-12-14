@@ -22,8 +22,7 @@ def compute_eer(pred_logits: Tensor, is_bonafide: LongTensor, return_rates: bool
     return np_compute_eer(bonafide_scores, other_scores, return_rates=return_rates)
 
 
-def plot_eer(pred_logits: Tensor, is_bonafide: LongTensor) -> plt.Figure:
-    eer, _, frr, far = compute_eer(pred_logits, is_bonafide, return_rates=True)
+def basic_plot_eer(eer, frr, far) -> plt.Figure:
     fig, ax = plt.subplots(figsize=(8, 6))
 
     xs = np.arange(len(far))
@@ -34,3 +33,8 @@ def plot_eer(pred_logits: Tensor, is_bonafide: LongTensor) -> plt.Figure:
 
     ax.legend()
     return fig
+
+
+def plot_eer(pred_logits: Tensor, is_bonafide: LongTensor) -> plt.Figure:
+    eer, _, frr, far = compute_eer(pred_logits, is_bonafide, return_rates=True)
+    return basic_plot_eer(eer, frr, far)

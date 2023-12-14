@@ -8,7 +8,6 @@ import lib.datasets
 # from lib import batch_sampler as batch_sampler_module
 from lib.collate_fn import collate_fn
 from lib.config_processing.parse_config import ConfigParser
-# from lib.text_encoder.base_encoder import BaseTextEncoder
 
 
 def get_dataloaders(configs: ConfigParser):

@@ -19,5 +19,5 @@ class AccuracyMetric(BaseMetric):
         pred_logits = pred_logits.detach().cpu()
         is_bonafide = is_bonafide.detach().cpu()
         pred_probs = F.softmax(pred_logits, dim=-1)  # (B, 2)
-        pred_is_bonafide = pred_probs[:, 0] >= self.bonafide_threshold  # (B,)
+        pred_is_bonafide = pred_probs[:, 1] >= self.bonafide_threshold  # (B,)
         return (pred_is_bonafide.long() == is_bonafide).float().mean().item()

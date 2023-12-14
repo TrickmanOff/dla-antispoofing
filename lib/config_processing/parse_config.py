@@ -30,7 +30,6 @@ class ConfigParser:
         # load config file and apply modification
         self._config = _update_config(config, modification)
         self.resume = resume
-        self._text_encoder = None
 
         # set save_dir where trained model and log will be saved.
         if "trainer" in self.config and "save_dir" in self.config["trainer"]:
@@ -175,13 +174,13 @@ class ConfigParser:
 
     @classmethod
     def get_default_configs(cls):
-        config_path = ROOT_PATH / "hw_asr" / "config.json"
+        config_path = ROOT_PATH / "lib" / "config.json"
         with config_path.open() as f:
             return cls(json.load(f))
 
     @classmethod
     def get_test_configs(cls):
-        config_path = ROOT_PATH / "hw_asr" / "tests" / "config.json"
+        config_path = ROOT_PATH / "lib" / "tests" / "config.json"
         with config_path.open() as f:
             return cls(json.load(f))
 
