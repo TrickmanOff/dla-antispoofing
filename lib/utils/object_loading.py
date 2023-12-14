@@ -6,14 +6,12 @@ from torch.utils.data import ConcatDataset, DataLoader
 
 import lib.datasets
 # from lib import batch_sampler as batch_sampler_module
-from lib.collate_fn.collate import Collator
+from lib.collate_fn import collate_fn
 from lib.config_processing.parse_config import ConfigParser
-from lib.mel import MelSpectrogram
-from lib.trainer.trainer import OptimizationStepper, TrainedNeuralNetwork
 # from lib.text_encoder.base_encoder import BaseTextEncoder
 
 
-def get_dataloaders(configs: ConfigParser, mel_spec_gen: Optional[MelSpectrogram] = None):
+def get_dataloaders(configs: ConfigParser):
     dataloaders = {}
     for split, params in configs["data"].items():
         if not isinstance(params, dict):
@@ -53,44 +51,11 @@ def get_dataloaders(configs: ConfigParser, mel_spec_gen: Optional[MelSpectrogram
         assert bs <= len(dataset), \
             f"Batch size ({bs}) shouldn't be larger than dataset length ({len(dataset)})"
 
-        collator = Collator(mel_spec_gen=mel_spec_gen)
-
         # create dataloader
         dataloader = DataLoader(
-            dataset, batch_size=bs, collate_fn=collator,
+            dataset, batch_size=bs, collate_fn=collate_fn,
             shuffle=shuffle, num_workers=num_workers,
             batch_sampler=batch_sampler, drop_last=drop_last
         )
         dataloaders[split] = dataloader
     return dataloaders
-
-
-def get_trained_network(config: ConfigParser, name,
-                        model_kwargs=None,
-                        optim_kwargs=None,
-                        scheduler_kwargs=None,
-                        loss_kwargs=None,
-                        module_arch=lib.model,
-                        module_optim=torch.optim,
-                        module_scheduler=torch.optim.lr_scheduler,
-                        module_loss=lib.loss) -> TrainedNeuralNetwork:
-    network_config = config[name]
-    model = config.init_obj(network_config["arch"], module_arch, **(model_kwargs or {}))
-    trainable_params = filter(lambda p: p.requires_grad, model.parameters())
-    optimizer = config.init_obj(network_config["optimizer"], module_optim, trainable_params, **(optim_kwargs or {}))
-    if "lr_scheduler" in network_config:
-        lr_scheduler = config.init_obj(network_config["lr_scheduler"]["scheduler"], module_scheduler, optimizer, **(scheduler_kwargs or {}))
-        scheduler_mode = network_config["lr_scheduler"]["scheduler_mode"]
-    else:
-        lr_scheduler = None
-        scheduler_mode = None
-
-    optimization_stepper = OptimizationStepper(optimizer, lr_scheduler, scheduler_mode=scheduler_mode)
-
-    loss_module = config.init_obj(config[name]["loss"], module_loss, **(loss_kwargs or {}))
-
-    return TrainedNeuralNetwork(
-        model=model,
-        optimization_stepper=optimization_stepper,
-        loss_module=loss_module,
-    )

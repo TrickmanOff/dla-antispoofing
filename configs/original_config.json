@@ -8,17 +8,13 @@
     "type": "RawNet2",
     "args": {
       "sinc_conv_config": {
-        "min_low_hz": 0,
-        "min_band_hz": 0,
+        "min_low_hz": 50,
+        "min_band_hz": 50,
         "freqs_partition_mode": "s1",
-        "kernel_size": 1024,
+        "kernel_size": 129,
         "abs_output": true
       },
-      "res_blocks_out_channels": [20, 20, 128, 128, 128, 128],
-      "normalize_before_gru": true,
-      "gru_config": {
-        "num_layers": 3
-      }
+      "res_blocks_out_channels": [128, 128, 512, 512, 512, 512]
     }
   }
 }
