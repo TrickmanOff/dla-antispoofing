@@ -1,6 +1,8 @@
 import dataclasses
 import json
+import tempfile
 from collections import OrderedDict
+from contextlib import contextmanager
 from itertools import repeat
 from pathlib import Path
 
@@ -8,6 +10,7 @@ import pandas as pd
 import requests
 import torch
 import torch.nn.functional as F
+from matplotlib import pyplot as plt
 from torch import Tensor
 from tqdm import tqdm
 
@@ -130,3 +133,15 @@ def download_file(url, to_dirpath=None, to_filename=None):
             for chunk in tqdm(r.iter_content(chunk_size=chunk_size), total=total, desc=desc, unit='MBytes'):
                 f.write(chunk)
     return local_filename
+
+
+@contextmanager
+def open_image_of_pyplot(figure) -> str:
+    file = tempfile.NamedTemporaryFile()
+    figure.savefig(file, format='png', bbox_inches='tight')
+    plt.close()
+
+    try:
+        yield file.name
+    finally:
+        file.close()
