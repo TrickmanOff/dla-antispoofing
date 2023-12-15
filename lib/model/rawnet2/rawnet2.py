@@ -20,17 +20,17 @@ class RawNet2(BaseModel):
 
         # input - of shape (B, 1, T)
         self.sinc_block = nn.Sequential(
-            SincConv_fast(out_channels=128, **sinc_conv_config),
+            SincConv_fast(**sinc_conv_config),
             nn.MaxPool1d(kernel_size=3),
-            nn.BatchNorm1d(128),
+            nn.BatchNorm1d(sinc_conv_config['out_channels']),
             nn.LeakyReLU(),
         )
         # freeze SincConv
         for param in self.sinc_block[0].parameters():
             param.requires_grad = False
-        # output - of shape (B, 128, T')
+        # output - of shape (B, sinc_conv_config['out_channels'], T')
 
-        self.res_blocks = ResBlocksStack(in_channels=128, out_channels=res_blocks_out_channels)
+        self.res_blocks = ResBlocksStack(in_channels=sinc_conv_config['out_channels'], out_channels=res_blocks_out_channels)
 
         # input of shape (B, T, C)
         if normalize_before_gru:

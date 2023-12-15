@@ -11,6 +11,7 @@
         "min_low_hz": 0,
         "min_band_hz": 0,
         "freqs_partition_mode": "s1",
+        "out_channels": 20,
         "kernel_size": 1024,
         "abs_output": true
       },

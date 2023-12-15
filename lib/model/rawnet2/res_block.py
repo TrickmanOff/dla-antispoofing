@@ -8,11 +8,14 @@ from .fms import FeatureMapScaling
 class ResBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3):
         super().__init__()
-        self.block = nn.Sequential(
+        self.pre_res = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=kernel_size, padding='same'),
             nn.BatchNorm1d(out_channels),
             nn.LeakyReLU(),
             nn.Conv1d(out_channels, out_channels, kernel_size=kernel_size, padding='same'),
+        )
+        self.scaling_input = nn.Identity() if in_channels == out_channels else nn.Conv1d(in_channels, out_channels, kernel_size=1)
+        self.post_res = nn.Sequential(
             nn.MaxPool1d(3),
             FeatureMapScaling(out_channels),
         )
@@ -22,7 +25,7 @@ class ResBlock(nn.Module):
         :param input: (B, C=in_channels, num_features)
         :return: (B, C'=out_channels, num_features')
         """
-        return self.block(input)
+        return self.post_res(self.pre_res(input) + self.scaling_input(input))
 
 
 class ResBlocksStack(nn.Module):
