@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional, Sequence
 
-import torch.nn.functional as F
-from torch import Tensor, nn
+import torch
+from torch import LongTensor, Tensor, nn
 
 from lib.model.base_model import BaseModel
 from .res_block import ResBlocksStack
@@ -18,10 +18,12 @@ class RawNet2(BaseModel):
         sinc_conv_config = sinc_conv_config or {}
         gru_config = gru_config or {}
 
+        self.sinc_maxpooling_size = 3
+
         # input - of shape (B, 1, T)
         self.sinc_block = nn.Sequential(
             SincConv_fast(**sinc_conv_config),
-            nn.MaxPool1d(kernel_size=3),
+            nn.MaxPool1d(kernel_size=self.sinc_maxpooling_size),
             nn.BatchNorm1d(sinc_conv_config['out_channels']),
             nn.LeakyReLU(),
         )
@@ -44,7 +46,18 @@ class RawNet2(BaseModel):
 
         self.head = nn.Linear(gru_hidden_size, 2)
 
-    def forward(self, wave: Tensor, **batch) -> Tensor:
+    def transform_input_lengths(self, input_lengths: LongTensor) -> LongTensor:
+        # before gru
+
+        # maxpooling in sinc
+        input_lengths = self.sinc_block[0].transform_input_lengths(input_lengths)
+        input_lengths = input_lengths // self.sinc_maxpooling_size
+        # resblocks
+        input_lengths = self.res_blocks.transform_input_lengths(input_lengths)
+
+        return input_lengths
+
+    def forward(self, wave: Tensor, wave_length: LongTensor, **batch) -> Tensor:
         """
         :param wave: (B, 1, T)
         :return: logits: (B, 2)
@@ -53,6 +66,8 @@ class RawNet2(BaseModel):
         output = self.res_blocks(output)  # (B, C', T'')
         if self.norm_before_gru is not None:
             output = self.norm_before_gru(output)
-        output = self.gru(output.transpose(-2, -1))[0][:, -1]  # (B, hidden_size)
+        outputs = self.gru(output.transpose(-2, -1))[0]  # (B, seq_len, hidden_size)
+        wave_length = self.transform_input_lengths(wave_length)
+        output = outputs[torch.arange(outputs.shape[0]), wave_length - 1]  # (B, hidden_size)
         logits = self.head(output)  # (B, 2)
         return logits

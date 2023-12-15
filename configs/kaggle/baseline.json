@@ -100,8 +100,8 @@
       }
   },
   "trainer": {
-    "log_step": 200,
-    "len_epoch": 1000,
+    "log_step": 100,
+    "len_epoch": 100,
     "epochs": 1000,
     "save_dir": "saved/",
     "save_period": 20,

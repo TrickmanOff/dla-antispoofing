@@ -118,6 +118,9 @@ class SincConv_fast(nn.Module):
         # self.n_ = 2 * pi * n / sr
         self.abs_output_ = abs_output
 
+    def transform_input_lengths(self, input_lengths: torch.LongTensor) -> torch.LongTensor:
+        return input_lengths - self.kernel_size + 1
+
     def forward(self, waveforms: torch.Tensor, verbose: bool = False) -> torch.Tensor:
         """
         Parameters
