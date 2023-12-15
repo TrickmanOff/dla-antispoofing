@@ -46,7 +46,7 @@ class ASVSpoof2019LADataset(BaseDataset):
         self._index_dir = data_dir if index_dir is None else index_dir
         index = self._get_or_load_index(part)
 
-        super().__init__(index, *args, config_parser=config_parser, **kwargs)
+        super().__init__(index, *args, config_parser=config_parser, is_train=(part == 'train'), **kwargs)
 
     def _load_dataset(self):
         arch_path = self._data_dir / f"LA.zip"
