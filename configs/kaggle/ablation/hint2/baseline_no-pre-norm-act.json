@@ -1,5 +1,5 @@
 {
-  "name": "baseline",
+  "name": "baseline (no-pre-norm-act)",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000
@@ -16,7 +16,7 @@
         "abs_output": true
       },
       "res_blocks_out_channels": [20, 20, 128, 128, 128, 128],
-      "normalize_before_gru": true,
+      "normalize_before_gru": false,
       "gru_hidden_size": 1024,
       "gru_config": {
         "num_layers": 3
@@ -105,9 +105,9 @@
   "trainer": {
     "log_step": 200,
     "len_epoch": 1000,
-    "epochs": 1000,
+    "epochs": 40,
     "save_dir": "saved/",
-    "save_period": 10,
+    "save_period": 5,
     "external_storage": {
         "type": "GDriveStorage",
         "args": {
@@ -119,7 +119,7 @@
     "verbosity": 2,
     "visualize": "wandb",
     "wandb_project": "dla_antispoof",
-    "wandb_run": "kaggle_baseline",
+    "wandb_run": "kaggle_baseline (no-pre-norm-act)",
     "grad_norm_clip": 100
   }
 }
