@@ -156,6 +156,7 @@ class Trainer(BaseTrainer):
                 # because we are interested in recent train metrics
                 last_train_metrics = self.train_metrics.result()
                 self.train_metrics.reset()
+                self._log_metrics_outputs(met_outputs)
             if batch_idx >= self.len_epoch:
                 break
         log = last_train_metrics
@@ -274,6 +275,7 @@ class Trainer(BaseTrainer):
     def _log_metrics_outputs(self, metrics_outputs: Dict):
         if 'frr' in metrics_outputs:
             assert 'far' in metrics_outputs and 'eer' in metrics_outputs
+            print('plotting EER')
             eer_fig = basic_plot_eer(metrics_outputs['eer'], metrics_outputs['frr'], metrics_outputs['far'])
             with open_image_of_pyplot(eer_fig) as img_filepath:
                 self.writer.add_image('EER_plot', img_filepath)
