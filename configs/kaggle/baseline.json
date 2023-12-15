@@ -115,7 +115,7 @@
             "client_secrets_filepath": "/kaggle/input/gdrive-secrets/client_secrets.json"
         }
     },
-    "monitor": "max eval_EER",
+    "monitor": "min eval_EER",
     "verbosity": 2,
     "visualize": "wandb",
     "wandb_project": "dla_antispoof",
