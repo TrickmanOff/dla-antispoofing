@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 
 class BaseMetric:
@@ -10,8 +10,9 @@ class BaseMetric:
                  *args, **kwargs):
         """
         :param calc_on_train_accum: is used only if `calc_on_entire_dataset` is set to True
-            if None, then all values collected during an epoch will be used
-            else when `calc_on_train_accum` values are accumulated, the metric is calculated
+            if -1, then all values collected during an epoch will be used
+            else if not None when `calc_on_train_accum` values are accumulated, the metric is calculated
+            else if None, the metric will be calculated at each log step
         """
         self.name = name if name is not None else type(self).__name__
         self.calc_on_train = calc_on_train

@@ -105,6 +105,8 @@ class Trainer(BaseTrainer):
                         if isinstance(value, torch.Tensor):
                             value = value.detach().cpu()
                         accumulated_batches[key].append(value)
+                    for met in self.metrics:
+                        accumulated_new_values_cnt[met.name] += batch['pred_logits'].shape[0]
             except RuntimeError as e:
                 if "out of memory" in str(e) and self.skip_oom:
                     self.logger.warning("OOM on batch. Skipping batch.")
@@ -134,12 +136,13 @@ class Trainer(BaseTrainer):
                 for met in self.metrics:
                     if met.calc_on_train and \
                             met.calc_on_entire_dataset and \
-                            met.calc_on_entire_dataset_train_accum is not None and \
-                            accumulated_new_values_cnt[met.name] >= met.calc_on_entire_dataset_train_accum:
+                            met.calc_on_entire_dataset_train_accum != -1 and \
+                            (met.calc_on_entire_dataset_train_accum is None or
+                                    accumulated_new_values_cnt[met.name] >= met.calc_on_entire_dataset_train_accum):
                         for key in accumulated_batches:
                             if len(accumulated_batches[key]) > 1:
                                 accumulated_batches[key] = [torch.concat(accumulated_batches[key], dim=0)]
-                        # print(f'Accumulated {accumulated_new_values_cnt[met.name]} new values for metric "{met.name}"')
+                        print(f'Accumulated {accumulated_new_values_cnt[met.name]} new values for metric "{met.name}"')
                         st_index = -accumulated_new_values_cnt[met.name]
                         accumulated_new_values_cnt[met.name] = 0
                         met_kwargs = {key: values[0][st_index:] for key, values in accumulated_batches.items()}
@@ -163,7 +166,7 @@ class Trainer(BaseTrainer):
                 accumulated_batches[key] = [torch.concat(accumulated_batches[key], dim=0)]
         met_outputs = {}
         for met in self.metrics:
-            if met.calc_on_train and met.calc_on_entire_dataset and met.calc_on_entire_dataset_train_accum is None:
+            if met.calc_on_train and met.calc_on_entire_dataset and met.calc_on_entire_dataset_train_accum == -1:
                 met_kwargs = {key: values[0] for key, values in accumulated_batches.items()}
                 met_output = met(**met_kwargs)
                 self.train_metrics.update(met.name, met_output.pop('metric') if isinstance(met_output, dict) else met_output)
