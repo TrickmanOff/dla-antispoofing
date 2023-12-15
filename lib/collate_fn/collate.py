@@ -39,7 +39,9 @@ def collate_fn(dataset_items: List[dict]) -> Dict[str, Any]:
     Collate and pad fields in dataset items
     """
     all_items = defaultdict(list)  # {str: [val1, val2, ...], ...}
+    all_keys = next(iter(dataset_items)).keys()
     for items in dataset_items:
+        assert all_keys == items.keys(), f'Keys for items are not the same: {items.keys()} != {all_keys}'
         for key, val in items.items():
             all_items[key].append(val)
 
