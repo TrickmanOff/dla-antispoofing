@@ -54,7 +54,7 @@
             "part": "dev",
             "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
             "index_dir": "indices",
-            "limit": 2000
+            "limit": 1000
           }
         }
       ]
@@ -69,7 +69,7 @@
             "part": "eval",
             "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
             "index_dir": "indices",
-            "limit": 2000
+            "limit": 5000
           }
         }
       ]
