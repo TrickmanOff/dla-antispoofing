@@ -25,6 +25,9 @@ class RawNet2(BaseModel):
             nn.BatchNorm1d(128),
             nn.LeakyReLU(),
         )
+        # freeze SincConv
+        for param in self.sinc_block[0].parameters():
+            param.requires_grad = False
         # output - of shape (B, 128, T')
 
         self.res_blocks = ResBlocksStack(in_channels=128, out_channels=res_blocks_out_channels)
