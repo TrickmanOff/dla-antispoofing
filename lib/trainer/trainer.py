@@ -119,7 +119,7 @@ class Trainer(BaseTrainer):
                     raise e
             self.train_metrics.update("grad norm", self.get_grad_norm())
             if batch_idx != 0 and batch_idx % self.log_step == 0:
-                self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx + 1)
+                self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
                 self.logger.debug(
                     "Train Epoch: {} {} Loss: {:.6f}".format(
                         epoch, self._progress(batch_idx), batch["loss"].item()
