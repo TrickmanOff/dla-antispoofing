@@ -15,7 +15,7 @@ from lib.utils import read_json, ROOT_PATH
 
 
 class ConfigParser:
-    def __init__(self, config, resume=None, modification=None, run_id=None):
+    def __init__(self, config, resume=None, modification=None, run_id=None, external_storage=None):
         """
         class to parse configuration json file. Handles hyperparameters for training,
         initializations of modules, checkpoint saving and logging module.
@@ -45,8 +45,11 @@ class ConfigParser:
         self._experiments_storage = experiments_storage
         self._log_dir = str(save_dir / "log" / exper_name / run_id)
 
-        self._external_storage = None if "trainer" not in self.config or "external_storage" not in self.config["trainer"] else \
-                                 self.init_obj(self.config["trainer"]["external_storage"], storage_module)
+        if external_storage is not None:
+            self._external_storage = external_storage
+        else:
+            self._external_storage = None if "trainer" not in self.config or "external_storage" not in self.config["trainer"] else \
+                                     self.init_obj(self.config["trainer"]["external_storage"], storage_module)
 
         # make directory for saving checkpoints and log.
         exist_ok = run_id == ""
