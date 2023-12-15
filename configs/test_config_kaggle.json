@@ -30,7 +30,7 @@
   },
   "data": {
     "train": {
-      "batch_size": 3,
+      "batch_size": 32,
       "num_workers": 0,
       "datasets": [
         {
@@ -46,7 +46,7 @@
       ]
     },
     "dev": {
-      "batch_size": 3,
+      "batch_size": 32,
       "num_workers": 0,
       "datasets": [
         {
@@ -55,7 +55,7 @@
             "part": "dev",
             "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
             "index_dir": "indices",
-            "limit": 64
+            "limit": 2000
           }
         }
       ]

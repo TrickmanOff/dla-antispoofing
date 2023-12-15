@@ -66,7 +66,7 @@ class Trainer(BaseTrainer):
         """
         Move all necessary tensors to the HPU
         """
-        for tensor_for_gpu in ["wave"]:
+        for tensor_for_gpu in ["wave", "is_bonafide"]:
             batch[tensor_for_gpu] = batch[tensor_for_gpu].to(device)
         return batch
 
@@ -239,7 +239,6 @@ class Trainer(BaseTrainer):
 
             for key in accumulated_batches:
                 accumulated_batches[key] = torch.concat(accumulated_batches[key], dim=0)
-            print(accumulated_batches["pred_logits"].shape)
             met_outputs = {}
             for met in self.metrics:
                 if met.calc_on_non_train and met.calc_on_entire_dataset:
@@ -298,7 +297,7 @@ class Trainer(BaseTrainer):
         rows = {}
         for id, spoofing_algo, wave, wave_length, is_bonafide, pred_bonafide_prob \
                 in tuples[:examples_to_log]:
-            audio = self.writer.create_audio(wave.squeeze()[:wave_length],
+            audio = self.writer.create_audio(wave.detach().cpu().squeeze()[:wave_length],
                                              sample_rate=self.config["preprocessing"]["sr"])
             rows[id] = {
                 "is bonafide": is_bonafide.item(),
