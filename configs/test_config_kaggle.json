@@ -59,6 +59,21 @@
           }
         }
       ]
+    },
+    "eval": {
+      "batch_size": 32,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVSpoof2019LADataset",
+          "args": {
+            "part": "eval",
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
+            "index_dir": "indices",
+            "limit": 2000
+          }
+        }
+      ]
     }
   },
   "metrics": [
@@ -68,6 +83,12 @@
         "name": "EER",
         "return_rates": true,
         "calc_on_entire_dataset": true
+      }
+    },
+    {
+      "type": "AccuracyMetric",
+      "args": {
+        "name": "accuracy"
       }
     }
   ],
