@@ -8,11 +8,11 @@ class AccuracyMetric(BaseMetric):
     """
     Mean accuracy
     """
-    def __init__(self, bonafide_threshold: float = 0.5):
+    def __init__(self, bonafide_threshold: float = 0.5, *args, **kwargs):
         """
         :param bonafide_threshold: objects with scores >= 'bonafide_threshold' are considered positive
         """
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.bonafide_threshold = bonafide_threshold
 
     def __call__(self, pred_logits: Tensor, is_bonafide: LongTensor, **batch) -> float:
