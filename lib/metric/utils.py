@@ -16,8 +16,8 @@ def compute_eer(pred_logits: Tensor, is_bonafide: LongTensor, return_rates: bool
     is_bonafide = is_bonafide.detach().cpu().numpy()
 
     is_bonafide_mask = (is_bonafide == 1)
-    bonafide_scores = pred_scores[is_bonafide_mask, 0]
-    other_scores = pred_scores[~is_bonafide_mask, 0]
+    bonafide_scores = pred_scores[is_bonafide_mask, 1]
+    other_scores = pred_scores[~is_bonafide_mask, 1]
 
     return np_compute_eer(bonafide_scores, other_scores, return_rates=return_rates)
 
