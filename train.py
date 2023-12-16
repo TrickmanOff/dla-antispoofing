@@ -68,7 +68,7 @@ def main(config):
 
 
 if __name__ == "__main__":
-    args = argparse.ArgumentParser(description="PyTorch Template")
+    args = argparse.ArgumentParser(description="Text AntiSpoofing training script")
     args.add_argument(
         "-c",
         "--config",
