@@ -1,0 +1,130 @@
+{
+  "name": "baseline (no-weight-decay)",
+  "n_gpu": 1,
+  "preprocessing": {
+    "sr": 16000
+  },
+  "arch": {
+    "type": "RawNet2",
+    "args": {
+      "sinc_conv_config": {
+        "min_low_hz": 0,
+        "min_band_hz": 0,
+        "freqs_partition_mode": "s1",
+        "out_channels": 20,
+        "kernel_size": 1024,
+        "abs_output": true
+      },
+      "res_blocks_out_channels": [20, 20, 128, 128, 128, 128],
+      "normalize_before_gru": true,
+      "gru_hidden_size": 1024,
+      "gru_config": {
+        "num_layers": 3
+      }
+    }
+  },
+  "loss": {
+    "type": "CrossEntropyLoss",
+    "args": {
+      "spoofed_weight": 1.0,
+      "bonafide_weight": 9.0
+    }
+  },
+  "data": {
+    "train": {
+      "batch_size": 32,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVSpoof2019LADataset",
+          "args": {
+            "part": "train",
+            "same_audio_length": 4.0,
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
+            "index_dir": "indices"
+          }
+        }
+      ]
+    },
+    "dev": {
+      "batch_size": 32,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVSpoof2019LADataset",
+          "args": {
+            "part": "dev",
+            "same_audio_length": 4.0,
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
+            "index_dir": "indices",
+            "limit": 1000
+          }
+        }
+      ]
+    },
+    "eval": {
+      "batch_size": 32,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVSpoof2019LADataset",
+          "args": {
+            "part": "eval",
+            "same_audio_length": 4.0,
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA",
+            "index_dir": "indices",
+            "limit": 5000
+          }
+        }
+      ]
+    }
+  },
+  "metrics": [
+    {
+      "type": "EERMetric",
+      "args": {
+        "name": "EER",
+        "return_rates": true,
+        "calc_on_entire_dataset": true
+      }
+    },
+    {
+      "type": "AccuracyMetric",
+      "args": {
+        "name": "accuracy"
+      }
+    },
+    {
+      "type": "AverageScoresMetric",
+      "args": {
+        "name": "avg_score"
+      }
+    }
+  ],
+  "optimizer": {
+      "type": "Adam",
+      "args": {
+        "lr": 1e-4
+      }
+  },
+  "trainer": {
+    "log_step": 200,
+    "len_epoch": 1000,
+    "epochs": 30,
+    "save_dir": "saved/",
+    "save_period": 10,
+    "external_storage": {
+        "type": "GDriveStorage",
+        "args": {
+            "storage_dir_id": "1NyzIOY9i22MPSqLqKEfs3A5Rz_UQOXuQ",
+            "client_secrets_filepath": "/kaggle/input/gdrive-secrets/client_secrets.json"
+        }
+    },
+    "monitor": "min eval_EER",
+    "verbosity": 2,
+    "visualize": "wandb",
+    "wandb_project": "dla_antispoof",
+    "wandb_run": "kaggle_baseline (no-weight-decay)",
+    "grad_norm_clip": 100
+  }
+}
