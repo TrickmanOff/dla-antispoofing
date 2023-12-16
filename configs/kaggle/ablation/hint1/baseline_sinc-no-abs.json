@@ -105,7 +105,7 @@
   "trainer": {
     "log_step": 200,
     "len_epoch": 1000,
-    "epochs": 30,
+    "epochs": 90,
     "save_dir": "saved/",
     "save_period": 5,
     "external_storage": {
