@@ -1,10 +1,12 @@
 import dataclasses
 import json
+import random
 import tempfile
 from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import repeat
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import requests
@@ -148,3 +150,22 @@ def open_image_of_pyplot(figure) -> str:
         yield file.name
     finally:
         file.close()
+
+
+def fix_audio_length(target_length: int, wave: torch.Tensor, seed: Optional[int] = None) -> torch.Tensor:
+    """
+    :param target_length: the number of samples
+    :param wave: of shape (1, T)
+    :return: wave of shape (1, target_length)
+    """
+    wave_len = wave.shape[1]
+    if wave_len < target_length:
+        times = (target_length + wave_len - 1) // wave_len
+        wave = wave.repeat((1, times))[:, :target_length]
+    else:
+        if seed is None:
+            st = random.randint(0, wave_len - target_length)
+        else:
+            st = abs(2*seed + 42) % (wave_len - target_length + 1)
+        wave = wave[:, st:st+target_length]
+    return wave

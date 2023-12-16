@@ -10,6 +10,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 
 from lib.config_processing import ConfigParser
+from lib.utils import fix_audio_length
 
 logger = logging.getLogger(__name__)
 
@@ -66,25 +67,6 @@ class BaseDataset(Dataset):
     def _sort_index(index: List[Dict[str, Any]]):
         return sorted(index, key=lambda x: x["audio_len"])
 
-    @staticmethod
-    def fix_length(target_length: int, wave: torch.Tensor, seed: Optional[int] = None) -> torch.Tensor:
-        """
-        :param target_length: the number of samples
-        :param wave: of shape (1, T)
-        :return: wave of shape (1, target_length)
-        """
-        wave_len = wave.shape[1]
-        if wave_len < target_length:
-            times = (target_length + wave_len - 1) // wave_len
-            wave = wave.repeat((1, times))[:, :target_length]
-        else:
-            if seed is None:
-                st = random.randint(0, wave_len - target_length)
-            else:
-                st = abs(2*seed + 42) % (wave_len - target_length + 1)
-            wave = wave[:, st:st+target_length]
-        return wave
-
     def __len__(self):
         return len(self._index)
 
@@ -102,7 +84,7 @@ class BaseDataset(Dataset):
                 audio_tensor_wave = self.wave_augs(audio_tensor_wave)
             if self.same_audio_length is not None:
                 seed = None if self.is_train else hash(audio_id)
-                audio_tensor_wave = self.fix_length(self.same_audio_length, audio_tensor_wave, seed=seed)
+                audio_tensor_wave = fix_audio_length(self.same_audio_length, audio_tensor_wave, seed=seed)
             return audio_tensor_wave
 
     @staticmethod

@@ -1,15 +1,21 @@
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Dict
 
+import pandas as pd
 import torch
+import torch.nn.functional as F
+import torchaudio
+from tqdm import tqdm
 
 import lib.model as module_model
 import lib.storage as module_storage
 from lib.config_processing import ConfigParser
 from lib.storage.experiments_storage import ExperimentsStorage
 from lib.storage.external_storage import ExternalStorage
+from lib.utils import fix_audio_length
 
 
 BEST_CHECKPOINT = {
@@ -19,15 +25,50 @@ BEST_CHECKPOINT = {
 }
 
 
-def main(model_config: Dict, checkpoint_filepath: Path,
-         input_dirpath: Path, output_dirpath: Path):
+def main(training_config: Dict, checkpoint_filepath: Path,
+         input_dirpath: Path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print('Loading weights of the model...')
-    model = ConfigParser.init_obj(model_config, module_model)
+    model = ConfigParser.init_obj(training_config['arch'], module_model)
     checkpoint = torch.load(checkpoint_filepath, map_location=device)["state_dict"]
     model.load_state_dict(checkpoint)
+    model.eval()
     print('Weights loaded')
+
+    training_sr = training_config['preprocessing']['sr']
+    same_audio_len = training_config['data']['train']['datasets'][0]['args'].get('same_audio_length', None)
+    if same_audio_len is not None:
+        print(f'Note that all audios will be cropped or duplicated to be {same_audio_len} seconds long')
+
+    rows = []
+    with torch.no_grad():
+        for audio_filename in tqdm(sorted(os.listdir(input_dirpath)), desc='Processing audios'):
+            wave, sr = torchaudio.load(input_dirpath / audio_filename)
+            # assert sr == training_sr, f'The model was trained with sample rate = {training_sr}, not {sr}'
+            if sr != training_sr:
+                wave = torchaudio.functional.resample(wave, sr, training_sr)
+            # waves = {audio_filename + ' (full)': wave}
+            waves = {}
+            wave_name = audio_filename
+
+            if same_audio_len is not None:
+                if wave.shape[-1] < int(same_audio_len * training_sr):
+                    wave_name += ' (duplicated)'
+                if wave.shape[-1] > int(same_audio_len * training_sr):
+                    wave_name += ' (cropped)'
+                waves[wave_name] = fix_audio_length(int(same_audio_len * training_sr), wave, seed=hash(audio_filename))
+            for wave_name, wave in waves.items():
+                pred_logits = model(wave=wave.unsqueeze(0), wave_length=torch.LongTensor([wave.shape[-1]]))[0]  # (2)
+                pred_probs = F.softmax(pred_logits, dim=0)
+                row = {
+                    'audio_filename': wave_name,
+                    'pred probability of being bonafide': pred_probs[1].item(),
+                }
+                rows.append(row)
+
+    res_df = pd.DataFrame(rows).set_index('audio_filename')
+    print(res_df)
 
 
 def get_best_checkpoint_filepath(external_storage_config: Dict) -> Path:
@@ -53,13 +94,6 @@ if __name__ == "__main__":
         help="a directory with audios",
     )
     args.add_argument(
-        "-o",
-        "--output",
-        default='result',
-        type=str,
-        help="a directory with resulting audios",
-    )
-    args.add_argument(
         "-c",
         "--checkpoint",
         default='',
@@ -74,8 +108,8 @@ if __name__ == "__main__":
         args.checkpoint = get_best_checkpoint_filepath(external_storage_config)
 
     # we assume it is located with checkpoint in the same folder
-    model_config_path = Path(args.checkpoint).parent / "config.json"
-    with model_config_path.open() as f:
-        model_config = json.load(f)['arch']
+    training_config_path = Path(args.checkpoint).parent / "config.json"
+    with training_config_path.open() as f:
+        training_config = json.load(f)
 
-    main(model_config, args.checkpoint, args.input, args.output)
+    main(training_config, args.checkpoint, Path(args.input))
