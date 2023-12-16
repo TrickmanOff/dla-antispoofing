@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import List, Optional
 
 
 class BaseMetric:
@@ -19,6 +19,12 @@ class BaseMetric:
         self.calc_on_non_train = calc_on_non_train
         self.calc_on_entire_dataset = calc_on_entire_dataset
         self.calc_on_entire_dataset_train_accum = calc_on_entire_dataset_train_accum
+
+    def _get_metrics_names(self) -> List[str]:
+        return ['']
+
+    def get_metrics_names(self) -> List[str]:
+        return [self.name if name == '' else self.name + '_' + name for name in self._get_metrics_names()]
 
     def __call__(self, **batch):
         raise NotImplementedError()

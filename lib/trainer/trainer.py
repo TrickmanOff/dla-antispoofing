@@ -51,11 +51,14 @@ class Trainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = config["trainer"].get("log_step", 50)
 
+        metrics_names = []
+        for m in self.metrics:
+            metrics_names += m.get_metrics_names()
         self.train_metrics = MetricTracker(
-            "loss", "grad norm", *[m.name for m in self.metrics], writer=self.writer
+            "loss", "grad norm", *metrics_names, writer=self.writer
         )
         self.evaluation_metrics = MetricTracker(
-            "loss", *[m.name for m in self.metrics], writer=self.writer
+            "loss", *metrics_names, writer=self.writer
         )
         self.accumulated_grad_steps = 0
         self.accumulate_grad_steps = config["trainer"].get("accumulate_grad_steps", 1)
@@ -208,7 +211,12 @@ class Trainer(BaseTrainer):
         metrics.update("loss", batch["loss"].item())
         for met in self.metrics:
             if not met.calc_on_entire_dataset:
-                metrics.update(met.name, met(**batch))
+                met_output = met(**batch)
+                if isinstance(met_output, dict):
+                    for key, val in met_output.items():
+                        metrics.update(met.name + '_' + key, val)
+                else:
+                    metrics.update(met.name, met_output)
         return batch
 
     def _evaluation_epoch(self, epoch, part, dataloader):
