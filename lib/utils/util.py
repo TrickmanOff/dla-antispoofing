@@ -168,7 +168,6 @@ def fix_audio_length(target_length: int, wave: torch.Tensor, seed=None) -> torch
         wave = wave.repeat((1, times))[:, :target_length]
     else:
         st = random.randint(0, wave_len - target_length)
-        print(st)
         wave = wave[:, st:st+target_length]
     if seed is not None:
         random.setstate(prev_randstate)
