@@ -68,7 +68,7 @@ def main(training_config: Dict, checkpoint_filepath: Path,
                 if wave.shape[-1] > int(same_audio_len * training_sr):
                     wave_name += ' (cropped)'
                 print(audio_filename)
-                waves[wave_name] = fix_audio_length(int(same_audio_len * training_sr), wave, seed=hash(audio_filename))
+                waves[wave_name] = fix_audio_length(int(same_audio_len * training_sr), wave, seed=audio_filename)
             for wave_name, wave in waves.items():
                 pred_logits = model(wave=wave.unsqueeze(0).to(device), wave_length=torch.LongTensor([wave.shape[-1]]).to(device))[0]  # (2)
                 pred_probs = F.softmax(pred_logits.cpu(), dim=0)

@@ -83,7 +83,7 @@ class BaseDataset(Dataset):
             if self.wave_augs is not None:
                 audio_tensor_wave = self.wave_augs(audio_tensor_wave)
             if self.same_audio_length is not None:
-                seed = None if self.is_train else hash(audio_id)
+                seed = None if self.is_train else audio_id
                 audio_tensor_wave = fix_audio_length(self.same_audio_length, audio_tensor_wave, seed=seed)
             return audio_tensor_wave
 

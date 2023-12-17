@@ -152,22 +152,24 @@ def open_image_of_pyplot(figure) -> str:
         file.close()
 
 
-def fix_audio_length(target_length: int, wave: torch.Tensor, seed: Optional[int] = None) -> torch.Tensor:
+def fix_audio_length(target_length: int, wave: torch.Tensor, seed=None) -> torch.Tensor:
     """
     :param target_length: the number of samples
     :param wave: of shape (1, T)
     :return: wave of shape (1, target_length)
     """
+    if seed is not None:
+        prev_randstate = random.getstate()
+        random.seed(seed)
+
     wave_len = wave.shape[1]
     if wave_len < target_length:
         times = (target_length + wave_len - 1) // wave_len
         wave = wave.repeat((1, times))[:, :target_length]
     else:
-        if seed is None:
-            st = random.randint(0, wave_len - target_length)
-        else:
-            print(wave_len, target_length, seed)
-            st = abs(2*seed + 42) % (wave_len - target_length + 1)
-            print(st)
+        st = random.randint(0, wave_len - target_length)
+        print(st)
         wave = wave[:, st:st+target_length]
+    if seed is not None:
+        random.setstate(prev_randstate)
     return wave
