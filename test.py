@@ -28,11 +28,11 @@ BEST_CHECKPOINT = {
 
 def main(training_config: Dict, checkpoint_filepath: Path,
          input_dirpath: Path,
-         log_results_to_wandb: bool = True):
+         log_results_to_wandb: bool = False):
     if log_results_to_wandb:
         wandb.login()
         wandb.init(
-            project='dla-antispoof',
+            project='dla_antispoof',
             name='inference',
         )
 
@@ -67,6 +67,7 @@ def main(training_config: Dict, checkpoint_filepath: Path,
                     wave_name += ' (duplicated)'
                 if wave.shape[-1] > int(same_audio_len * training_sr):
                     wave_name += ' (cropped)'
+                print(audio_filename)
                 waves[wave_name] = fix_audio_length(int(same_audio_len * training_sr), wave, seed=hash(audio_filename))
             for wave_name, wave in waves.items():
                 pred_logits = model(wave=wave.unsqueeze(0).to(device), wave_length=torch.LongTensor([wave.shape[-1]]).to(device))[0]  # (2)
@@ -76,12 +77,13 @@ def main(training_config: Dict, checkpoint_filepath: Path,
                     'pred probability of being bonafide': pred_probs[1].item(),
                 }
                 if log_results_to_wandb:
-                    row['audio'] = wandb.Audio(wave.numpy(), sample_rate=training_sr)
+                    row['audio'] = wandb.Audio(wave.numpy()[0], sample_rate=training_sr)
                 rows.append(row)
 
     res_df = pd.DataFrame(rows).set_index('audio_filename')
     if log_results_to_wandb:
         wandb.log({'results': wandb.Table(dataframe=res_df.reset_index())})
+        res_df.drop(columns='audio', inplace=True)
     print(res_df)
 
 
@@ -114,6 +116,11 @@ if __name__ == "__main__":
         type=str,
         help="model checkpoint filepath",
     )
+    args.add_argument(
+        "-w",
+        action="store_true",
+        help="load inference results to wandb",
+    )
     args = args.parse_args()
 
     # download the best checkpoint if not specified
@@ -126,4 +133,4 @@ if __name__ == "__main__":
     with training_config_path.open() as f:
         training_config = json.load(f)
 
-    main(training_config, args.checkpoint, Path(args.input))
+    main(training_config, args.checkpoint, Path(args.input), log_results_to_wandb=args.w)
