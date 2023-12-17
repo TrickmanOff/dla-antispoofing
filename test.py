@@ -8,6 +8,7 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 import torchaudio
+import wandb
 from tqdm import tqdm
 
 import lib.model as module_model
@@ -26,13 +27,22 @@ BEST_CHECKPOINT = {
 
 
 def main(training_config: Dict, checkpoint_filepath: Path,
-         input_dirpath: Path):
+         input_dirpath: Path,
+         log_results_to_wandb: bool = True):
+    if log_results_to_wandb:
+        wandb.login()
+        wandb.init(
+            project='dla-antispoof',
+            name='inference',
+        )
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print('Loading weights of the model...')
     model = ConfigParser.init_obj(training_config['arch'], module_model)
     checkpoint = torch.load(checkpoint_filepath, map_location=device)["state_dict"]
     model.load_state_dict(checkpoint)
+    model.to(device)
     model.eval()
     print('Weights loaded')
 
@@ -59,15 +69,19 @@ def main(training_config: Dict, checkpoint_filepath: Path,
                     wave_name += ' (cropped)'
                 waves[wave_name] = fix_audio_length(int(same_audio_len * training_sr), wave, seed=hash(audio_filename))
             for wave_name, wave in waves.items():
-                pred_logits = model(wave=wave.unsqueeze(0), wave_length=torch.LongTensor([wave.shape[-1]]))[0]  # (2)
-                pred_probs = F.softmax(pred_logits, dim=0)
+                pred_logits = model(wave=wave.unsqueeze(0).to(device), wave_length=torch.LongTensor([wave.shape[-1]]).to(device))[0]  # (2)
+                pred_probs = F.softmax(pred_logits.cpu(), dim=0)
                 row = {
                     'audio_filename': wave_name,
                     'pred probability of being bonafide': pred_probs[1].item(),
                 }
+                if log_results_to_wandb:
+                    row['audio'] = wandb.Audio(wave.numpy(), sample_rate=training_sr)
                 rows.append(row)
 
     res_df = pd.DataFrame(rows).set_index('audio_filename')
+    if log_results_to_wandb:
+        wandb.log({'results': wandb.Table(dataframe=res_df.reset_index())})
     print(res_df)
 
 
